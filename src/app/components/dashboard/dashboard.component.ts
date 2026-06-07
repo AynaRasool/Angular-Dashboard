@@ -1,11 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { StatsService, Stat, ActivityItem } from '../../services/stats.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [DecimalPipe],
   template: `
     <div class="dashboard">
       <div class="section-header">
@@ -15,17 +15,18 @@ import { StatsService, Stat, ActivityItem } from '../../services/stats.service';
 
       <!-- Stats Grid -->
       <div class="stats-grid">
-        <div class="stat-card" *ngFor="let stat of stats; let i = index"
-             [style.animation-delay]="i * 0.1 + 's'">
-          <div class="stat-icon" [style.color]="stat.color">{{ stat.icon }}</div>
-          <div class="stat-info">
-            <div class="stat-label">{{ stat.label }}</div>
-            <div class="stat-value">{{ stat.value }}</div>
-            <div class="stat-change" [class.positive]="stat.change > 0" [class.negative]="stat.change < 0">
-              {{ stat.change > 0 ? '↑' : '↓' }} {{ stat.change | number:'1.1-1' }}% {{ stat.changeLabel }}
+        @for (stat of stats; track stat.label; let i = $index) {
+          <div class="stat-card" [style.animation-delay]="i * 0.1 + 's'">
+            <div class="stat-icon" [style.color]="stat.color">{{ stat.icon }}</div>
+            <div class="stat-info">
+              <div class="stat-label">{{ stat.label }}</div>
+              <div class="stat-value">{{ stat.value }}</div>
+              <div class="stat-change" [class.positive]="stat.change > 0" [class.negative]="stat.change < 0">
+                {{ stat.change > 0 ? '↑' : '↓' }} {{ stat.change | number:'1.1-1' }}% {{ stat.changeLabel }}
+              </div>
             </div>
           </div>
-        </div>
+        }
       </div>
 
       <!-- Bottom Grid -->
@@ -38,13 +39,15 @@ import { StatsService, Stat, ActivityItem } from '../../services/stats.service';
             <span class="badge">Live</span>
           </div>
           <div class="activity-list">
-            <div class="activity-item" *ngFor="let item of activity">
-              <div class="activity-status" [class]="item.status"></div>
-              <div class="activity-content">
-                <div class="activity-action">{{ item.action }}</div>
-                <div class="activity-meta">{{ item.user }} · {{ item.time }}</div>
+            @for (item of activity; track item.id) {
+              <div class="activity-item">
+                <div class="activity-status" [class]="item.status"></div>
+                <div class="activity-content">
+                  <div class="activity-action">{{ item.action }}</div>
+                  <div class="activity-meta">{{ item.user }} · {{ item.time }}</div>
+                </div>
               </div>
-            </div>
+            }
           </div>
         </div>
 
@@ -55,16 +58,18 @@ import { StatsService, Stat, ActivityItem } from '../../services/stats.service';
             <span class="badge success">3 passing</span>
           </div>
           <div class="pipeline-list">
-            <div class="pipeline-item" *ngFor="let p of pipelines">
-              <div class="pipeline-info">
-                <span class="pipeline-name font-mono">{{ p.name }}</span>
-                <span class="pipeline-branch">{{ p.branch }}</span>
+            @for (p of pipelines; track p.name) {
+              <div class="pipeline-item">
+                <div class="pipeline-info">
+                  <span class="pipeline-name font-mono">{{ p.name }}</span>
+                  <span class="pipeline-branch">{{ p.branch }}</span>
+                </div>
+                <div class="pipeline-status" [class]="p.status">
+                  <span class="status-dot"></span>
+                  {{ p.status }}
+                </div>
               </div>
-              <div class="pipeline-status" [class]="p.status">
-                <span class="status-dot"></span>
-                {{ p.status }}
-              </div>
-            </div>
+            }
           </div>
         </div>
 
@@ -97,8 +102,6 @@ import { StatsService, Stat, ActivityItem } from '../../services/stats.service';
       font-family: var(--font-mono);
     }
     .font-mono { font-family: var(--font-mono); }
-
-    /* Stats Grid */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -148,8 +151,6 @@ import { StatsService, Stat, ActivityItem } from '../../services/stats.service';
     }
     .stat-change.positive { color: var(--accent-green); }
     .stat-change.negative { color: var(--accent-red); }
-
-    /* Bottom Grid */
     .bottom-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -187,8 +188,6 @@ import { StatsService, Stat, ActivityItem } from '../../services/stats.service';
       background: rgba(34,211,160,0.15);
       color: var(--accent-green);
     }
-
-    /* Activity */
     .activity-list { display: flex; flex-direction: column; gap: 0.85rem; }
     .activity-item { display: flex; gap: 0.75rem; align-items: flex-start; }
     .activity-status {
@@ -200,8 +199,6 @@ import { StatsService, Stat, ActivityItem } from '../../services/stats.service';
     .activity-status.failed { background: var(--accent-red); box-shadow: 0 0 6px var(--accent-red); }
     .activity-action { font-size: 0.82rem; color: var(--text-primary); margin-bottom: 0.15rem; }
     .activity-meta { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); }
-
-    /* Pipelines */
     .pipeline-list { display: flex; flex-direction: column; gap: 0.85rem; }
     .pipeline-item {
       display: flex; align-items: center; justify-content: space-between;
@@ -219,10 +216,7 @@ import { StatsService, Stat, ActivityItem } from '../../services/stats.service';
     .pipeline-status.success { color: var(--accent-green); }
     .pipeline-status.running { color: var(--accent-orange); }
     .pipeline-status.failed { color: var(--accent-red); }
-    .status-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: currentColor;
-    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
     .pipeline-status.running .status-dot { animation: pulse 1s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
   `]
@@ -237,7 +231,7 @@ export class DashboardComponent implements OnInit {
     { name: 'ci-build-test.yml', branch: 'fix/auth', status: 'success' },
   ];
 
-  constructor(private statsService: StatsService) {}
+  private statsService = inject(StatsService);
 
   ngOnInit(): void {
     this.statsService.getStats().subscribe(data => this.stats = data);
