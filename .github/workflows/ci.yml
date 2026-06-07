@@ -30,7 +30,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -63,7 +63,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies (if cache miss)
-        run: npm ci
+        run: npm install
 
       - name: Run lint
         run: npm run lint
@@ -93,7 +93,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies (if cache miss)
-        run: npm ci
+        run: npm install
 
       - name: Run unit tests with coverage
         run: npm run test:ci
@@ -131,7 +131,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies (if cache miss)
-        run: npm ci
+        run: npm install
 
       - name: Build production bundle
         run: npm run build:prod
